@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<!-- Configures the Camel Context-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+	
+<!--
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>jms.properties</value>
+			</list>
+		</property>
+		<property name="ignoreResourceNotFound" value="true" />
+  		<property name="searchSystemEnvironment" value="true" />
+  		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+	</bean>
+-->
+
+	<bean id="bridgePropertyPlaceholder" class="org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>jms.properties</value>
+			</list>
+		</property>
+		<property name="ignoreResourceNotFound" value="true" />
+  		<property name="searchSystemEnvironment" value="true" />
+  		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+	</bean>
+
+	<bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+	  <property name="userName" value="${jms.user}"/>
+	  <property name="password" value="${jms.password}"/>
+	  <property name="brokerURL" value="tcp://${JMS_HOST}:${JMS_PORT}"/>
+	  <property name="redeliveryPolicy">
+	    <bean class="org.apache.activemq.RedeliveryPolicy">
+	      <property name="maximumRedeliveries" value="${msg.retries}"/>
+	      <property name="redeliveryDelay" value="5000"/>
+	    </bean>
+	  </property>
+	</bean>
+
+	<bean id="poolConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop">
+	  <property name="maxConnections" value="8"/>
+	  <property name="connectionFactory" ref="jmsConnectionFactory"/>
+	</bean>
+
+	<bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+	  <property name="connectionFactory" ref="poolConnectionFactory"/>
+	</bean>
+
+	<bean id="PROPAGATION_REQUIRED" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
+	    <property name="transactionManager" ref="jmsTransactionManager"/>
+	    <property name="propagationBehaviorName" value="PROPAGATION_REQUIRED"/>
+	</bean>
+
+	<bean id="PROPAGATION_NEVER" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
+	    <property name="transactionManager" ref="jmsTransactionManager"/>
+	    <property name="propagationBehaviorName" value="PROPAGATION_NEVER"/>
+	</bean>
+
+	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+	  <property name="connectionFactory" ref="poolConnectionFactory"/>
+	  <property name="transacted" value="true"/>
+	  <property name="transactionManager" ref="jmsTransactionManager"/>
+	</bean>
+
+  <camelContext id="auto-dms-jms" xmlns="http://camel.apache.org/schema/spring">
+<!--
+	<propertyPlaceholder id="properties" location="classpath:jms.properties"/>
+-->
+	<jmxAgent id="jmx-agent" disabled="true"/>
+
+<!--
+	<onException>
+	  <exception>java.net.ConnectException</exception>
+	  <redeliveryPolicy maximumRedeliveries="0"/>
+	</onException>
+-->
+
+	  <route id="getVehicleDataMsgs">
+	    <from uri="activemq:queue:{{queue.name}}?disableReplyTo=true"/>
+	    <transacted ref="PROPAGATION_REQUIRED"/>
+	    <setHeader headerName="batchId">
+		<xpath>/msgEnvelope/header/batchId/text()</xpath>
+	    </setHeader>
+	    <log message="Begin:\nQueue: {{queue.name}}"/>
+            <log message="\nBatch ID: ${in.header.batchId}\nXML message:\n${body}"/>
+	    <choice>
+	      <when>
+		<xpath>/msgEnvelope/header[msgType='Vehicle']</xpath>
+		<to uri="direct:processVehiList" pattern="InOnly"/>
+	      </when>
+	    </choice>
+	    <log message="End"/>
+	  </route>
+
+	  <route id="processMessages">
+	    <from uri="direct:processVehiList"/>
+	    <transacted ref="PROPAGATION_REQUIRED"/>
+	    <log message="Begin"/>
+	    <split> 
+		<xpath>//vehicle</xpath>
+		<to uri="direct:callRestService" pattern="InOnly"/>
+	    </split>
+	    <log message="End"/>
+	  </route>
+
+	  <route id="postMessages">
+	    <from uri="direct:callRestService"/>
+	    <transacted ref="PROPAGATION_REQUIRED"/>
+	    <setHeader headerName="operation">
+		<xpath>/vehicle/opType/text()</xpath>
+	    </setHeader>
+	    <to uri="xslt:vehicle.xsl"/>
+	    <log message="Begin:\nOperation: ${in.header.operation}\nXML message:\n${body}"/>
+	    <choice>
+	      <when>
+		<simple>${in.header.operation} == "Create"</simple>
+		<setHeader headerName="CamelHttpMethod">
+		  <constant>POST</constant>
+		</setHeader>
+		<to uri="http://{{env:AUTO_INV_SERVICE_HOST}}:{{env:AUTO_INV_SERVICE_PORT}}/AutoDMS/vehicle"/>
+		<log message="HTTP response code: ${in.header.CamelHttpResponseCode}"/>
+	      </when>
+	      <when>
+		<simple>${in.header.operation} == "Update"</simple>
+		<setHeader headerName="CamelHttpMethod">
+		  <constant>POST</constant>
+		</setHeader>
+		<setHeader headerName="vehicleid">
+		  <xpath>/vehicle/vehicleId/text()</xpath>
+		</setHeader>
+		<setHeader headerName="CamelHttpPath">
+		  <simple>AutoDMS/vehicle/${in.header.vehicleid}</simple>
+		</setHeader>
+		<to uri="http://{{env:AUTO_INV_SERVICE_HOST}}:{{env:AUTO_INV_SERVICE_PORT}}/"/>
+		<log message="HTTP response code: ${in.header.CamelHttpResponseCode}"/>
+	      </when>
+	      <when>
+		<simple>${in.header.operation} == "Delete"</simple>
+		<setHeader headerName="CamelHttpMethod">
+		  <constant>DELETE</constant>
+		</setHeader>
+		<setHeader headerName="vehicleid">
+		  <xpath>/vehicle/vehicleId/text()</xpath>
+		</setHeader>
+		<setHeader headerName="CamelHttpPath">
+		  <simple>AutoDMS/vehicle/${in.header.vehicleid}</simple>
+		</setHeader>
+		<to uri="http://{{env:AUTO_INV_SERVICE_HOST}}:{{env:AUTO_INV_SERVICE_PORT}}/"/>
+		<log message="HTTP response code: ${in.header.CamelHttpResponseCode}"/>
+	      </when>
+	    </choice>
+	    <log message="End"/>
+	  </route>
+
+  </camelContext>
+
+</beans>
