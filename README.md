@@ -17,9 +17,9 @@ This project buids upon the OpenShift concepts discussed in the GitHub project t
 This project examines and demonstrates the following OpenShift Enterprise / FIS features that are essential for building a highly performant, reliable and scalable integration application.
 
 1.  **S2I Workflow**: Accelerate the development, testing and deployment of integration applications with OpenShift xPaaS.
-2.  **Reliability**: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.
+2.  **Reliability**: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.  Data integrity and consistency are key requirements for almost all enterprise applications.  When the target/destination systems are unavailable, the system has to persist the messages to allow re-delivery of the messages at a later time.  This also ensures data doesn't get lost in-flight between the source and target systems and the data is always consistent across all systems participating in the transaction. 
 3.  **Stability**: Use of proven, tried and true enterprise integration patterns (EIPs) for building sophisticated integration applications using Apache Camel (included in FIS).
-4.  **High Performance**: Use Spring-Boot to instantiate & run the Camel application natively in the JVM.  With Spring-Boot an application server or run-time is not required to run the application.  As a result, the application is extremely light weight and delivers better throughput and run-time performance.  
+4.  **High Performance**: Use of Spring-Boot to instantiate & run the Camel application natively in the JVM.  With Spring-Boot an application server or run-time is not required to run the application.  As a result, the application is extremely light weight and delivers better throughput and run-time performance.  
 5.  **Scalability**: Build stateless microservices and deploy them on OpenShift.  Leverage OpenShift's built-in container scaling feature to dynamically scale the application in order to efficiently handle the incoming data processing workload (scale up or down).
 6.  **High Availability**: Leverage OpenShift's built-in high availability features to ensure the application is always available and ready to process transactions resulting in zero application downtime.
 
@@ -69,3 +69,80 @@ This microservice is implemented using Apache Camel routes.  At a high level, th
 5. Makes REST (Http) API calls to transmit the XML messages to the corresponding target service end-point.
 
 ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/description.png)
+
+### A] Deploy *ose-fis-jms-tx* microservice on OpenShift Enterprise v3.1/v3.2
+The steps listed below for building and deploying the microservice application follows approach [1] described above, the S2I workflow.
+
+1.  Fork this repository so that it gets added to your GitHub account.
+2.  Download the template file (template object definition) into your OpenShift master node.
+  * On the GitHub project (browser) click on *kube-template.json*, then click on *Raw*.  Copy the http URL and use the CURL command to download the template file to your OpenShift master node (OR to the server where you have installed OpenShift client tools). Use the command below to download the template file.
+  
+  ```
+  $ curl https://raw.githubusercontent.com/<your GIT account name>/ose-fis-auto-dealer/master/kube-template.json > kube-template.json
+  ```
+3.  Import the template file into your project 
+  * Alternatively, you can import the template to the 'openshift' project using '-n openshift' option.  This would give all OpenShift users access to this template definition.
+  
+  ```
+  $ oc create -f kube-template.json
+  ```
+  * To view all application templates in your current project
+  ```
+  $ oc get templates
+  ```
+4.  Using a web browser, login to OpenShift using the Web UI - 
+
+  ```
+  https://<Host name or IP address of OSE master node>:8443/
+  ```
+
+  Or Alternatively use the command line interface (CLI).
+
+  ```
+  $ oc login -u user -p password  
+  ```
+  
+5.  Select the *fis-apps* OpenShift project which you created earlier in this [GitHub project] (https://github.com/ganrad/ose-fis-auto-dealer).  Alternatively, if you are using the CLI, use the command shown below to switch to *fis-apps* project.
+
+  ```
+  $ oc project fis-apps
+  ```
+
+6.  Create the microservice application
+  * This command kicks off the S2I build process in OpenShift.
+  * Alternatively, you can use the OpenShift Web UI to create the application.
+  * Remember to substitute your GIT account user name in the GIT http url below.
+  ```
+  $ oc new-app --template=fis-jms-tx-template --param=GIT_REPO=https://github.com/<your GIT account username>/ose-fis-jms-tx.git
+  ```
+7.  Use the commands below to check the status of the build and deployment 
+  * The build (Maven) might take a while (approx. 10-20 mins) to download all dependencies, build the code and then push the image into the integrated Docker registry.
+  * Once the build completes and the image is pushed into the registry, the deployment process would start.
+  * Check the builds
+  ```
+  $ oc get builds
+  ```
+  * Stream/view the build logs
+  ```
+  $ oc logs -f <build name | build pod name>
+  ```
+  * Check the deployment
+  ```
+  $ oc get dc
+  ```
+  * Check the pods.  After the deployment pod completes, the application pod should show a status of *running*.
+  ```
+  $ oc get pods
+  ```
+  * At this point, you should have successfully built an Apache Camel based RESTful microservice using OpenShift FIS tooling and deployed the same to OpenShift PaaS!
+  
+  ![alt tag]()
+8.  Open a command line window and tail the output from the application Pod.
+   
+   ```
+   $ oc get pods
+   $ oc log pod -f <pod name>
+   ```
+   Substitute the name of your Pod in the command above.  
+
+### B] Test the *ose-fis-jms-tx* microservice application
