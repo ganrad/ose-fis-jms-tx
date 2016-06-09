@@ -19,8 +19,8 @@ This project examines and demonstrates the following OpenShift Enterprise / FIS 
 1.  **S2I Workflow**: Accelerate the development, testing and deployment of integration applications with OpenShift xPaaS.
 2.  **Reliability**: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.
 3.  **Stability**: Use of proven, tried and true enterprise integration patterns (EIPs) for building sophisticated integration applications using Apache Camel (included in FIS).
-4.  **High Performance**: Use Spring-Boot to instantiate & run the Camel application natively in the JVM.  No application server or run-time is required to run the application.  This results in an extremely light weight application thereby increasing the application throughput and run-time performance.  
-5.  **Scalability**: Build stateless microservices and deploy them on OpenShift.  Leverage OpenShift's built-in scaling feature to dynamically scale the application in order to match the data processing workload (scale up or down).
+4.  **High Performance**: Use Spring-Boot to instantiate & run the Camel application natively in the JVM.  With Spring-Boot an application server or run-time is not required to run the application.  As a result, the application is extremely light weight and delivers better throughput and run-time performance.  
+5.  **Scalability**: Build stateless microservices and deploy them on OpenShift.  Leverage OpenShift's built-in container scaling feature to dynamically scale the application in order to efficiently handle the incoming data processing workload (scale up or down).
 6.  **High Availability**: Leverage OpenShift's built-in high availability features to ensure the application is always available and ready to process transactions resulting in zero application downtime.
 
 This microservice is implemented using Apache Camel routes.  At a high level, the Camel routes execute the following sequence of steps (see description and diagram below):
