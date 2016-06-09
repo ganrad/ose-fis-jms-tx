@@ -117,7 +117,7 @@ The steps listed below for building and deploying the microservice application f
   ```
   $ oc new-app --template=fis-jms-tx-template --param=GIT_REPO=https://github.com/<your GIT account username>/ose-fis-jms-tx.git,JMS_HOST=<JMS Provider Host>,JMS_PORT=<JMS Provider Port>
   ```
-  * Substitute values for the following application parameters as they apply to your environment.  
+  * Specify values for the following application parameters.  
   
   **GIT_REPO:** The GIT Repository URL.  Remember to substitute your GIT account *user name* in the URL.  
   **JMS_HOST:** The JMS provider host name or IP address.  
@@ -130,7 +130,7 @@ The steps listed below for building and deploying the microservice application f
   ```
   $ oc get builds
   ```
-  * Stream/view the build logs
+  * Stream/view the build logs. Substitute the name of the build in the command below.
   ```
   $ oc logs -f <build name | build pod name>
   ```
@@ -142,7 +142,7 @@ The steps listed below for building and deploying the microservice application f
   ```
   $ oc get pods
   ```
-  * At this point, you should have successfully built an Apache Camel based RESTful microservice using OpenShift FIS tooling and deployed the same to OpenShift PaaS!
+  * At this point, you should have successfully built an Apache Camel based JMS microservice using OpenShift FIS tooling and deployed the same to OpenShift PaaS!
   
   ![alt tag]()
 8.  Open a command line window and tail the output from the application Pod.
