@@ -12,4 +12,58 @@ For building Apache Camel applications within Docker containers and then deployi
 2.  Apache Maven Workflow : Using this path, the developer uses fabric8 Maven plug-in(s) to build the Apache Camel application, generate the docker image containing both the compiled application binary & the run-time, push the docker image to the registry & lastly generate the TOD containing the list of kubernetes objects necessary to deploy the application to OpenShift.  For more detailed info. on this workflow & steps for deploying a sample application using this workflow, please refer to this GitHub project <https://github.com/RedHatWorkshops/rider-auto-openshift>
 
 ## Description
-This microservice 
+This project buids upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the respective artifacts (*microservices*) to OpenShift. 
+
+This project examines and demonstrates the following OpenShift Enterprise / FIS features that are essential for building a highly performant, reliable and scalable integration application.
+
+1.  S2I Workflow: Accelerate the development, testing and deployment of integration applications with OpenShift xPaaS.
+2.  Reliability: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.
+3.  Stability: Use of proven, tried and true enterprise integration patterns (EIPs) for building sophisticated integration applications using Apache Camel (included in FIS).
+4.  High Performance: Use Spring-Boot to instantiate & run the Camel application natively in the JVM.  No application server or run-time is required to run the application.  This results in an extremely light weight application thereby increasing the application throughput and run-time performance.  
+5.  Scalability: Build stateless microservices and deploy them on OpenShift.  Leverage OpenShift's built-in scaling feature to dynamically scale the application to match the processing workload (scale up or down).
+6.  High availability: Leverage OpenShift's built-in high availability features to ensure the application is always available and ready to process transactions resulting in zero application downtime.
+
+This microservice is implemented using Apache Camel routes.  At a high level, the Camel routes execute the following sequence of steps (see description and diagram below):
+
+1. Read XML messages from a JMS Queue using a local transaction manager.  See screenshot below for the structure of the XML message.
+
+  ```
+  <?xml version="1.0" encoding="UTF-8"?>
+  <msgEnvelope>
+    <header>
+      <batchId>1001</batchId>
+      <contType>List</contType>
+      <msgType>Vehicle</msgType>
+      <msgVersion>001</msgVersion>
+    </header>
+    <body>
+      <items>
+        <vehicle>
+          <vehicleId>001</vehicleId>
+          <make>Honda</make>
+          <model>Civic</model>
+          <type>LX</type>
+          <year>2016</year>
+          <price>18999</price>
+          <inventoryCount>2</inventoryCount>
+          <opType>Create</opType>
+        </vehicle>
+        <vehicle>
+          <vehicleId>001</vehicleId>
+          <make>Honda</make>
+          <model>Civic</model>
+          <type>LX</type>
+          <year>2016</year>
+          <price>19099</price>
+          <inventoryCount>2</inventoryCount>
+          <opType>Update</opType>
+        </vehicle>
+        ......
+      </items>
+    </body>
+  </msgEnvelope>
+  ```
+2. Uses [content based router](http://camel.apache.org/content-based-router.html) EIP to determine the type of the message (‘Vehicle’) and send it to its intended destination.
+3. Uses a [splitter](http://camel.apache.org/splitter.html) EIP to split the inbound message into multiple outbound messages.
+4. Uses an XSLT stylesheet to transform the inbound message format to the outbound message format as expected by the target microservice.
+5. Makes REST (Http) API calls to send the XML messages to the corresponding target end-point.
