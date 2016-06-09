@@ -110,11 +110,19 @@ The steps listed below for building and deploying the microservice application f
 
 6.  Create the microservice application
   * This command kicks off the S2I build process in OpenShift.
-  * Alternatively, you can use the OpenShift Web UI to create the application.
-  * Remember to substitute your GIT account user name in the GIT http url below.
+  * Use the OpenShift Web UI to create the application.  See the screenshot below.
+  
+  ![alt tag]()
+  * Alternatively, if you are using the CLI, use the command below to create the application.
   ```
-  $ oc new-app --template=fis-jms-tx-template --param=GIT_REPO=https://github.com/<your GIT account username>/ose-fis-jms-tx.git
+  $ oc new-app --template=fis-jms-tx-template --param=GIT_REPO=https://github.com/<your GIT account username>/ose-fis-jms-tx.git,JMS_HOST=<JMS Provider Host>,JMS_PORT=<JMS Provider Port>
   ```
+  * Substitute values for the following application parameters as they apply to your environment.  
+  
+  **GIT_REPO:** The GIT Repository URL.  Remember to substitute your GIT account *user name* in the URL.  
+  **JMS_HOST:** The JMS provider host name or IP address.  
+  **JMS_PORT:** The JMS provider listener port number.  
+
 7.  Use the commands below to check the status of the build and deployment 
   * The build (Maven) might take a while (approx. 10-20 mins) to download all dependencies, build the code and then push the image into the integrated Docker registry.
   * Once the build completes and the image is pushed into the registry, the deployment process would start.
