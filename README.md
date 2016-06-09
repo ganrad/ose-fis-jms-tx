@@ -68,4 +68,4 @@ This microservice is implemented using Apache Camel routes.  At a high level, th
 4. Uses an XSLT stylesheet to transform the inbound message format to the outbound message format as expected by the target microservice.
 5. Makes REST (Http) API calls to transmit the XML messages to the corresponding target service end-point.
 
-![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/description.jpg)
+![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/description.png)
