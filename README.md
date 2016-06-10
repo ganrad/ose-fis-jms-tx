@@ -6,10 +6,12 @@
 
 This project uses OpenShift FIS (Fuse Integration Services) tools and explains how to develop, build and deploy Apache Camel based microservices in OpenShift Enterprise v3.1/v3.2.
 
+<span id="deploy">
 For building Apache Camel applications within Docker containers and then deploying the resulting container images onto OpenShift, developers can take two different approaches or paths.  The steps outlined here use approach # 1 (see below) in order to build and deploy this microservice application.
 
 1.  **S2I (Source to Image) Workflow** : Using this path, a user generates a template object definition (TOD) using the fabric8 Maven plug-in which is included in the OpenShift FIS tools package.  The TOD contains a list of kubernetes objects and also includes info. on the S2I image (builder image) which will be used to build the container image containing the camel application binaries along with the respective run-time (Fuse or Camel).  To learn more about FIS for OpenShift or types of runtimes an Apache Camel application can be deployed to, refer to this [blog] (http://blog.christianposta.com/cloud-native-camel-riding-with-jboss-fuse-and-openshift/) 
 2.  **Apache Maven Workflow** : Using this path, the developer uses fabric8 Maven plug-in(s) to build the Apache Camel application, generate the docker image containing both the compiled application binary & the run-time, push the docker image to the registry & lastly generate the TOD containing the list of kubernetes objects necessary to deploy the application to OpenShift.  For more detailed info. on this workflow & steps for deploying a sample application using this workflow, please refer to this GitHub project <https://github.com/RedHatWorkshops/rider-auto-openshift>
+</span>
 
 ## Description
 This project buids upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the respective artifacts (*microservices*) to OpenShift. 
@@ -17,7 +19,7 @@ This project buids upon the OpenShift concepts discussed in the GitHub project t
 This project examines and demonstrates the following OpenShift Enterprise / FIS features that are essential for building a highly performant, reliable and scalable integration application.
 
 1.  **S2I Workflow**: Accelerate the development, testing and deployment of integration applications with OpenShift xPaaS.
-2.  **Reliability**: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.  Data integrity and consistency are key requirements for almost all enterprise applications.  When the target/destination systems are unavailable, the system has to persist the messages to allow re-delivery of the messages at a later time.  This also ensures data doesn't get lost in-flight between the source and target systems and the data is always consistent across all systems participating in the transaction. 
+2.  **Reliability**: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.  Data integrity and consistency are key requirements for almost all enterprise applications.  To ensure data integrity and consistency, the application has to read/write messages from/to source/destination systems under the control of a transaction manager (TM). The TM will ensure the reads and writes are performed in an atomic fashion and will ensure data read/persisted across all applications involved in the transaction is consistent.   The TM will also notify the message broker (ActiveMQ or other JMS provider) when the messages cannot be delivered to the recipient system to allow re-delivery of the messages at a later time.  This ensures data doesn't get lost in-flight between the source and target systems and the data is always consistent across all systems participating in the transaction. 
 3.  **Stability**: Use of proven, tried and true enterprise integration patterns (EIPs) for building sophisticated integration applications using Apache Camel (included in FIS).
 4.  **High Performance**: Use of Spring-Boot to instantiate & run the Camel application natively in the JVM.  With Spring-Boot an application server or run-time is not required to run the application.  As a result, the application is extremely light weight and delivers better throughput and run-time performance.  
 5.  **Scalability**: Build stateless microservices and deploy them on OpenShift.  Leverage OpenShift's built-in container scaling feature to dynamically scale the application in order to efficiently handle the incoming data processing workload (scale up or down).
@@ -70,8 +72,15 @@ This microservice is implemented using Apache Camel routes.  At a high level, th
 
 ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/description.png)
 
-### A] Deploy *ose-fis-jms-tx* microservice on OpenShift Enterprise v3.1/v3.2
-The steps listed below for building and deploying the microservice application follows approach [1] described above, the S2I workflow.
+## Steps for deploying **ose-fis-jms-tx** microservice on OpenShift Enterprise v3.1/v3.2
+
+### A] Start Apache ActiveMQ JMS Provider
+This project uses the Apache ActiveMQ JMS provider (Broker) for providing reliable messaging & guaranteed delivery of messages between source and target systems.  The instructions outlined here assume the messaging provider is running on a server/node which resides outside the OpenShift Cluster.  This solution can also be easily tailored to use a JMS provider  that is running within the OpenShift cluster ([JBoss A-MQ](http://www.jboss.org/products/amq/overview/) within a Docker container). 
+
+Refer to the Apache ActiveMQ website [documentation] (http://activemq.apache.org/getting-started.html) for installing and configuring an ActiveMQ messaging server / broker.  Note down the server hostname (or IP Address) and listener port number (default: 61616) as we will need to provide these values while configuring the microservice (Step B).
+
+### B] Deploy *ose-fis-jms-tx* microservice
+The steps listed below for building and deploying the microservice application follows approach <a href="#deploy"># 1</a> described above, the S2I workflow.
 
 1.  Fork this repository so that it gets added to your GitHub account.
 2.  Download the template file (template object definition) into your OpenShift master node.
@@ -153,4 +162,65 @@ The steps listed below for building and deploying the microservice application f
    ```
    Substitute the name of your Pod in the command above.  
 
-### B] Test the *ose-fis-jms-tx* microservice application
+### B] Test *ose-fis-jms-tx* microservice
+**NOTE:** At this point, the microservice [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer) should have been deployed to OpenShift and the corresponding pods for the microservice and backend datastore (MongoDB) should be running.  The *ose-fis-auto-dealer* microservice exposes REST API service end-points which will be consumed by this microservice.
+
+1.  Create and save a few XML Vehicle data files (*'batch update'*) into a working directory preferably on the server/machine where your Apache ActiveMQ server is deployed/running.  A sample XML data file is provided in the *'data'* directory of this project. 
+2.  Use the Apache ActiveMQ Admin web application and login using admin credentials.  See Admin URL below.  Replace *'<host>'* with the hostname/IP address of the ActiveMQ server. 
+  ```
+  ActiveMQ Admin URL : https://<host>:8161/admin
+  ```
+  * On the admin web page, click on the link *'Send'*.   In the next page, specify **'vehiQ'** as the *'Queue'* name in the *Destination* field.  Copy the XML message you saved in Step 1 into the *'Message body'* text box below.  Then click on *'Send'*.  See screenshot below.
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/amq-send.png)
+  
+3.  The XML files should be immediately read by this microservice, the data should be converted to JSON format & persisted to the collection *'ose'* within MongoDB database *'test'*.  You should also be able to view corresponding log messages in the command window as shown below.
+
+   ```
+   2016-05-17 22:52:08,531 [e://target/data] INFO  readVehicleFiles               - Read Vehicle Data File : /deployments/target/data/vn01.xml
+   <?xml version="1.0"?>
+   <vehicle>
+	      <vehicleId>001</vehicleId>
+	      <make>Honda</make>
+	      <model>Civic</model>
+	      <type>LX</type>
+	      <year>2016</year>
+	      <price>18999</price>
+	      <inventoryCount>2</inventoryCount>
+   </vehicle>
+   ```
+2.  Test the Http REST end-points using your browser.  Substitute the correct values for route name, project name and 
+openshift domain name as they apply to your OpenShift environment.  You will also have to substitute values for URL parameters (excluding { } in URL's below) when issuing the corresponding GET/POST/DELETE Http calls.  All Http REST API calls return data in JSON format.
+  * Retrieve vehicle info. by ID or by price range (Http GET) : 
+  
+  ```
+  http://route name-project name.openshift domain name/AutoDMS/vehicle/{vehicleid}
+  http://route name-project name.openshift domain name/AutoDMS/vehicle/pricerange/{minprice}/{maxprice}
+  ```
+  * Store (Create or Update) vehicle info. (Http POST) :
+  
+  ```
+  http://route name-project name.openshift domain name/AutoDMS/vehicle
+  http://route name-project name.openshift domain name/AutoDMS/vehicle/{vehicleid}
+  ```
+  * Delete vehicle info. (Http DELETE) :
+  
+  ```
+  http://route name-project name.openshift domain name/AutoDMS/vehicle/{vehicleid}
+  ```
+  
+3.  You can view the REST API responses in the Pod output / command window as shown below.
+
+  ```
+  2016-05-17 22:53:24,788 [tp1244815033-20] INFO  getVehicle                     - {
+  "vehicleId" : "001",
+  "make" : "Honda",
+  "model" : "Civic",
+  "type" : "LX",
+  "year" : "2016",
+  "price" : 18999,
+  "inventoryCount" : 2
+}
+  ```
+  * REST API response shown in browser window below.
+  
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-auto-dealer/master/images/results01.png)
