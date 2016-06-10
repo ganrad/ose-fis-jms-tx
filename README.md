@@ -6,12 +6,11 @@
 
 This project uses OpenShift FIS (Fuse Integration Services) tools and explains how to develop, build and deploy Apache Camel based microservices in OpenShift Enterprise v3.1/v3.2.
 
-<span id="deploy">
+<div id="deploy"/>
 For building Apache Camel applications within Docker containers and then deploying the resulting container images onto OpenShift, developers can take two different approaches or paths.  The steps outlined here use approach # 1 (see below) in order to build and deploy this microservice application.
 
 1.  **S2I (Source to Image) Workflow** : Using this path, a user generates a template object definition (TOD) using the fabric8 Maven plug-in which is included in the OpenShift FIS tools package.  The TOD contains a list of kubernetes objects and also includes info. on the S2I image (builder image) which will be used to build the container image containing the camel application binaries along with the respective run-time (Fuse or Camel).  To learn more about FIS for OpenShift or types of runtimes an Apache Camel application can be deployed to, refer to this [blog] (http://blog.christianposta.com/cloud-native-camel-riding-with-jboss-fuse-and-openshift/) 
 2.  **Apache Maven Workflow** : Using this path, the developer uses fabric8 Maven plug-in(s) to build the Apache Camel application, generate the docker image containing both the compiled application binary & the run-time, push the docker image to the registry & lastly generate the TOD containing the list of kubernetes objects necessary to deploy the application to OpenShift.  For more detailed info. on this workflow & steps for deploying a sample application using this workflow, please refer to this GitHub project <https://github.com/RedHatWorkshops/rider-auto-openshift>
-</span>
 
 ## Description
 This project buids upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the respective artifacts (*microservices*) to OpenShift. 
@@ -170,10 +169,11 @@ The steps listed below for building and deploying the microservice application f
   ```
   ActiveMQ Admin URL : https://<host>:8161/admin
   ```
-  * On the admin web page, click on the link *'Send'*.   In the next page, specify **'vehiQ'** as the *'Queue'* name in the *Destination* field.  Copy the XML message you saved in Step 1 into the *'Message body'* text box below.  Then click on *'Send'*.  See screenshot below.
+3.  On the admin web page, click on the link *'Send'*.   In the next page, specify **'vehiQ'** as the *'Queue'* name in the *Destination* field.  Copy the XML message you saved in Step 1 into the *'Message body'* text box below.  Then click on *'Send'*.  See screenshot below.
+
   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/amq-send.png)
   
-3.  The XML files should be immediately read by this microservice, the data should be converted to JSON format & persisted to the collection *'ose'* within MongoDB database *'test'*.  You should also be able to view corresponding log messages in the command window as shown below.
+4.  The Vehicle (*Batch* update) XML message should be immediately read from the queue by this microservice.  This message would then be split into individual XML messages and each message would be sent to the respective REST service end-point.  You should be able to view Http response code returned by the REST service end-points in the command window as shown below.
 
    ```
    2016-05-17 22:52:08,531 [e://target/data] INFO  readVehicleFiles               - Read Vehicle Data File : /deployments/target/data/vn01.xml
@@ -188,7 +188,7 @@ The steps listed below for building and deploying the microservice application f
 	      <inventoryCount>2</inventoryCount>
    </vehicle>
    ```
-2.  Test the Http REST end-points using your browser.  Substitute the correct values for route name, project name and 
+5.  Access the Http REST service end-points using your browser.  Substitute the correct values for route name, project name (fis-apps) and 
 openshift domain name as they apply to your OpenShift environment.  You will also have to substitute values for URL parameters (excluding { } in URL's below) when issuing the corresponding GET/POST/DELETE Http calls.  All Http REST API calls return data in JSON format.
   * Retrieve vehicle info. by ID or by price range (Http GET) : 
   
@@ -208,7 +208,7 @@ openshift domain name as they apply to your OpenShift environment.  You will als
   http://route name-project name.openshift domain name/AutoDMS/vehicle/{vehicleid}
   ```
   
-3.  You can view the REST API responses in the Pod output / command window as shown below.
+6.  You can view the REST API responses in the Pod output / command window as shown below.
 
   ```
   2016-05-17 22:53:24,788 [tp1244815033-20] INFO  getVehicle                     - {
