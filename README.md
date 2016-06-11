@@ -13,7 +13,7 @@ For building Apache Camel applications within Docker containers and then deployi
 2.  **Apache Maven Workflow** : Using this path, the developer uses fabric8 Maven plug-in(s) to build the Apache Camel application, generate the docker image containing both the compiled application binary & the run-time, push the docker image to the registry & lastly generate the TOD containing the list of kubernetes objects necessary to deploy the application to OpenShift.  For more detailed info. on this workflow & steps for deploying a sample application using this workflow, please refer to this GitHub project <https://github.com/RedHatWorkshops/rider-auto-openshift>
 
 ## Description
-This project buids upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the respective artifacts (*microservices*) to OpenShift. 
+This project buids upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the microservice to OpenShift. 
 
 This project examines and demonstrates the following OpenShift Enterprise / FIS features that are essential for building a highly performant, reliable and scalable integration application.
 
@@ -77,6 +77,8 @@ This microservice is implemented using Apache Camel routes.  At a high level, th
 This project uses the Apache ActiveMQ JMS provider (Broker) for providing reliable messaging & guaranteed delivery of messages between source and target systems.  The instructions outlined here assume the messaging provider is running on a server/node which resides outside the OpenShift Cluster.  This solution can also be easily tailored to use a JMS provider  that is running within the OpenShift cluster ([JBoss A-MQ](http://www.jboss.org/products/amq/overview/) within a Docker container). 
 
 Refer to the Apache ActiveMQ website [documentation] (http://activemq.apache.org/getting-started.html) for installing and configuring an ActiveMQ messaging server / broker.  Note down the server hostname (or IP Address) and listener port number (default: 61616) as we will need to provide these values while configuring the microservice (Step B).
+
+1. Specify correct values for properties *jms.user* and *jms.password* in the file *src/main/resources/jms.properties*.  These properties are used by the Camel application (microservice) to authenticate against the Apache ActiveMQ server.  The default values for these properties in the *jms.properties* file is *admin/admin*. 
 
 ### B] Deploy *ose-fis-jms-tx* microservice
 The steps listed below for building and deploying the microservice application follows approach <a href="#deploy"># 1</a> described above, the S2I workflow.
