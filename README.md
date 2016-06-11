@@ -78,7 +78,7 @@ This project uses the Apache ActiveMQ JMS provider (Broker) for providing reliab
 
 Refer to the Apache ActiveMQ website [documentation] (http://activemq.apache.org/getting-started.html) for installing and configuring an ActiveMQ messaging server / broker.  Note down the server hostname (or IP Address) and listener port number (default: 61616) as we will need to provide these values while configuring the microservice (Step B).
 
-1. Specify correct values for properties *jms.user* and *jms.password* in the file *src/main/resources/jms.properties*.  These properties are used by the Camel application (microservice) to authenticate against the Apache ActiveMQ server.  The default values for these properties in the *jms.properties* file is *admin/admin*. 
+1. Specify correct values for properties *jms.user* and *jms.password* in the file *src/main/resources/jms.properties*.  These properties are used by the Camel application (microservice) to authenticate against the Apache ActiveMQ server.  The default values for these properties in the *jms.properties* file is *admin*. 
 
 ### B] Deploy *ose-fis-jms-tx* microservice
 The steps listed below for building and deploying the microservice application follows approach <a href="#deploy"># 1</a> described above, the S2I workflow.
@@ -164,10 +164,11 @@ The steps listed below for building and deploying the microservice application f
    Substitute the name of your Pod in the command above.  
 
 ### B] Test *ose-fis-jms-tx* microservice
-**NOTE:** At this point, the microservice [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer) should have been deployed to OpenShift and the corresponding pods for the microservice and backend datastore (MongoDB) should be running.  The *ose-fis-auto-dealer* microservice exposes REST API service end-points which will be consumed by this microservice.
+**NOTE:** The microservice [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer) should have been deployed to OpenShift and the corresponding Pods for the microservice and backend datastore (MongoDB) should be running.  The *ose-fis-auto-dealer* microservice exposes REST API service end-points which will be consumed by this microservice.
 
 1.  Create and save a few XML Vehicle data files (*'batch update'*) into a working directory preferably on the server/machine where your Apache ActiveMQ server is deployed/running.  A sample XML data file is provided in the *'data'* directory of this project. 
-2.  Use the Apache ActiveMQ Admin web application and login using admin credentials.  See Admin URL below.  Replace *'<host>'* with the hostname/IP address of the ActiveMQ server. 
+2.  Use the Apache ActiveMQ Admin web application and login using admin credentials.  See Admin URL below.  Replace *'<host>'* with the hostname/IP address of the ActiveMQ server.
+
   ```
   ActiveMQ Admin URL : https://<host>:8161/admin
   ```
