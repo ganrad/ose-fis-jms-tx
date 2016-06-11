@@ -76,7 +76,7 @@ This microservice is implemented using Apache Camel routes.  At a high level, th
 ### A] Start Apache ActiveMQ JMS Provider
 This project uses the Apache ActiveMQ JMS provider (Broker) for providing reliable messaging & guaranteed delivery of messages between source and target systems.  The instructions outlined here assume the messaging provider is running on a server/node which resides outside the OpenShift Cluster.  This solution can also be easily tailored to use a JMS provider  that is running within the OpenShift cluster ([JBoss A-MQ](http://www.jboss.org/products/amq/overview/) within a Docker container). 
 
-Refer to the Apache ActiveMQ website [documentation] (http://activemq.apache.org/getting-started.html) for installing and configuring an ActiveMQ messaging server / broker.  Note down the server hostname (or IP Address) and listener port number (default: 61616) as we will need to provide these values while configuring the microservice (Step B).
+Refer to the Apache ActiveMQ website [documentation] (http://activemq.apache.org/getting-started.html) for installing and configuring an ActiveMQ messaging server / broker.  Note down the server hostname (or IP Address) and listener port number (default: 61616) as we will need to provide these values while configuring the microservice in Step B.
 
 1. Specify correct values for properties *jms.user* and *jms.password* in the file *src/main/resources/jms.properties*.  These properties are used by the Camel application (microservice) to authenticate against the Apache ActiveMQ server.  The default values for these properties in the *jms.properties* file is *admin*. 
 
@@ -120,12 +120,12 @@ The steps listed below for building and deploying the microservice application f
 
 6.  Create the microservice application
   * This command kicks off the S2I build process in OpenShift.
-  * Use the OpenShift Web UI to create the application.  Click 'Add to Project' button at the top.  Next, enter 'fis' in the 'Select Image or Template' text field.  Then select the 'fis-jms-tx-template.  See the screenshot below.
+  * Use the OpenShift Web UI to create the application.  Click 'Add to Project' button at the top.  Next, enter 'fis' in the 'Select Image or Template' text field.  Then select the *'fis-jms-tx-template'*.  See the screenshot below.
   
-  ![alt tag]()
-  * On the next screen, specify values for GIT_REPO, JMS_HOST and JMS_PORT application parameters. See screenshot below.
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/sel-template.png)
+  * On the next screen, specify values for GIT_REPO, JMS_HOST and JMS_PORT application parameters as they apply to your environment. See screenshot below.
   
-  ![alt tag]()
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/app-param.png)
 
   **GIT_REPO:** The GIT Repository URL.  Remember to substitute your GIT account *user name* in the URL.  
   **JMS_HOST:** The JMS provider host name or IP address.  
@@ -156,14 +156,14 @@ The steps listed below for building and deploying the microservice application f
   ```
   * At this point, you should have successfully built an Apache Camel based JMS microservice using OpenShift FIS tooling and deployed the same to OpenShift PaaS!
   
-  ![alt tag]()
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/pod-status.png)
 8.  Open separate command line windows and tail the output from the both the application (microservice) Pods.
    
    ```
    $ oc get pods
    $ oc log pod -f <pod name>
    ```
-   Substitute the name of your Pod in the respective command above.  
+   Substitute the name of the Pods in the command above (as applicable).  
 
 ### B] Test *ose-fis-jms-tx* microservice
 **NOTE:** The microservice [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer) should have been deployed to OpenShift and the corresponding Pods for the microservice and backend datastore (MongoDB) should be running.  The *ose-fis-auto-dealer* microservice exposes REST API service end-points which will be consumed by this microservice.
@@ -221,11 +221,11 @@ The steps listed below for building and deploying the microservice application f
    2016-06-11 15:29:27,365 [tp1620112330-23] INFO  deleteVehicle                  - Mongodb delete query: {"vehicleId":"020"}
    2016-06-11 15:29:27,366 [tp1620112330-23] INFO  deleteVehicle                  - Mongodb response: Record delete count=0
    ```
-   * Use the OpenShift Web Console to login into the MongoDB Pod and verify that the records have been persisted in the data store.  If you dropped the sample XML file (from *data* directory) into the ActiveMQ Queue then there should be 10 documents in the MongoDB data store. See screenshot below.
+   * Use the OpenShift Web Console to login into the MongoDB Pod and verify that the records have been persisted in the data store.  If you dropped the sample XML file (from *data* directory) into the ActiveMQ Queue then there should be 10 documents in the MongoDB collection *ose* within the database. See screenshot below.
    
-   ![alt tag]()
+   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/db-verify.png)
    *  Lastly, use the ActiveMQ admin console to verify the message has been consumed (enqueued/dequeued) from the *'vehiQ'* Queue.  See screenshot below.
-   ![alt tag]()
+   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/amq-verify.png)
 
 5.  Access the Http REST service end-points using your browser.  Substitute the correct values for route name, project name (fis-apps) and 
 openshift domain name as they apply to your OpenShift environment.  You will also have to substitute values for URL parameters (excluding { } in URL's below) when issuing the corresponding GET/POST/DELETE Http calls.  All Http REST API calls return data in JSON format.
@@ -269,6 +269,6 @@ openshift domain name as they apply to your OpenShift environment.  You will als
   "inventoryCount" : 4
 }
   ```
-  * REST API response shown in browser window below.
+  * REST API response (in browser window) is shown below.
   
-  ![alt tag]()
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/api-get.png)
