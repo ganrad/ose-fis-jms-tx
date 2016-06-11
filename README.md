@@ -157,13 +157,13 @@ The steps listed below for building and deploying the microservice application f
   * At this point, you should have successfully built an Apache Camel based JMS microservice using OpenShift FIS tooling and deployed the same to OpenShift PaaS!
   
   ![alt tag]()
-8.  Open a command line window and tail the output from the application Pod.
+8.  Open separate command line windows and tail the output from the both the application (microservice) Pods.
    
    ```
    $ oc get pods
    $ oc log pod -f <pod name>
    ```
-   Substitute the name of your Pod in the command above.  
+   Substitute the name of your Pod in the respective command above.  
 
 ### B] Test *ose-fis-jms-tx* microservice
 **NOTE:** The microservice [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer) should have been deployed to OpenShift and the corresponding Pods for the microservice and backend datastore (MongoDB) should be running.  The *ose-fis-auto-dealer* microservice exposes REST API service end-points which will be consumed by this microservice.
@@ -178,21 +178,55 @@ The steps listed below for building and deploying the microservice application f
 
   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/amq-send.png)
   
-4.  The Vehicle (*Batch* update) XML message should be immediately read from the queue by this microservice.  This message would then be split into individual XML messages and each message would be sent to the respective REST service end-point.  You should be able to view Http response code returned by the REST service end-points in the command window as shown below.
+4.  The Vehicle (*Batch* update) XML message should be immediately read from the queue by this microservice.  This message would then be split into individual XML messages and each message would be sent to the respective REST service API end-point.
+  * You should be able to view Http response code returned by the REST service API end-points in the Pod command window.  Output from the *ose-fis-jms-tx* microservice (Pod) is shown below.
 
    ```
-   2016-05-17 22:52:08,531 [e://target/data] INFO  readVehicleFiles               - Read Vehicle Data File : /deployments/target/data/vn01.xml
-   <?xml version="1.0"?>
-   <vehicle>
-	      <vehicleId>001</vehicleId>
-	      <make>Honda</make>
-	      <model>Civic</model>
-	      <type>LX</type>
-	      <year>2016</year>
-	      <price>18999</price>
-	      <inventoryCount>2</inventoryCount>
-   </vehicle>
+   2016-06-11 15:29:27 INFO  postMessages:96 - HTTP response code: 200
+   2016-06-11 15:29:27 INFO  postMessages:96 - End
+   2016-06-11 15:29:27 INFO  postMessages:96 - Begin:
+   Operation: Delete
+   XML message:
+   <?xml version="1.0" encoding="UTF-8"?><vehicle>
+        <vehicleId>020</vehicleId>
+        <make>Toyota</make>
+        <model>Tacoma</model>
+        <type>4x4 LE</type>
+        <year>2016</year>
+        <price>32000</price>
+        <inventoryCount>2</inventoryCount>
+        
+      </vehicle>
+   2016-06-11 15:29:27 INFO  postMessages:96 - HTTP response code: 200
+   2016-06-11 15:29:27 INFO  postMessages:96 - End
+   2016-06-11 15:29:27 INFO  processMessages:96 - End
+   2016-06-11 15:29:27 INFO  getVehicleDataMsgs:96 - End
+
    ```
+   * Output from the *ose-fis-auto-dealer* microservice (Pod) is shown below.
+   ```
+   2016-06-11 15:29:27,351 [tp1620112330-25] INFO  storeVehicle                   - HTTP request body:
+   <?xml version="1.0" encoding="UTF-8"?><vehicle>
+        <vehicleId>008</vehicleId>
+        <make>Toyota</make>
+        <model>Tacoma</model>
+        <type>4x4 LE</type>
+        <year>2016</year>
+        <price>32000</price>
+        <inventoryCount>2</inventoryCount>
+        
+      </vehicle>
+   2016-06-11 15:29:27,351 [tp1620112330-25] INFO  storeVehicle                   - Database:test, Collection:ose
+   2016-06-11 15:29:27,352 [tp1620112330-25] INFO  storeVehicle                   - Insert in mongodb collection successful!
+   2016-06-11 15:29:27,365 [tp1620112330-23] INFO  deleteVehicle                  - Mongodb delete query: {"vehicleId":"020"}
+   2016-06-11 15:29:27,366 [tp1620112330-23] INFO  deleteVehicle                  - Mongodb response: Record delete count=0
+   ```
+   * Use the OpenShift Web Console to login into the MongoDB Pod and verify that the records have been persisted in the data store.  If you dropped the sample XML file (from *data* directory) into the ActiveMQ Queue then there should be 10 documents in the MongoDB data store. See screenshot below.
+   
+   ![alt tag]()
+   *  Lastly, use the ActiveMQ admin console to verify the message has been consumed (enqueued/dequeued) from the *'vehiQ'* Queue.  See screenshot below.
+   ![alt tag]()
+
 5.  Access the Http REST service end-points using your browser.  Substitute the correct values for route name, project name (fis-apps) and 
 openshift domain name as they apply to your OpenShift environment.  You will also have to substitute values for URL parameters (excluding { } in URL's below) when issuing the corresponding GET/POST/DELETE Http calls.  All Http REST API calls return data in JSON format.
   * Retrieve vehicle info. by ID or by price range (Http GET) : 
@@ -216,16 +250,25 @@ openshift domain name as they apply to your OpenShift environment.  You will als
 6.  You can view the REST API responses in the Pod output / command window as shown below.
 
   ```
-  2016-05-17 22:53:24,788 [tp1244815033-20] INFO  getVehicle                     - {
-  "vehicleId" : "001",
-  "make" : "Honda",
-  "model" : "Civic",
-  "type" : "LX",
+  2016-06-11 15:46:08,129 [tp1620112330-22] INFO  getVehicle                     - Mongodb response: {
+  "_id" : {
+    "time" : 1465673367000,
+    "timestamp" : 1465673367,
+    "date" : 1465673367000,
+    "inc" : 29617468,
+    "timeSecond" : 1465673367,
+    "machine" : -458177733,
+    "new" : false
+  },
+  "vehicleId" : "005",
+  "make" : "Toyota",
+  "model" : "Camry",
+  "type" : "LE",
   "year" : "2016",
-  "price" : 18999,
-  "inventoryCount" : 2
+  "price" : 22000,
+  "inventoryCount" : 4
 }
   ```
   * REST API response shown in browser window below.
   
-  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-auto-dealer/master/images/results01.png)
+  ![alt tag]()
