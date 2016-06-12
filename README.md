@@ -164,7 +164,7 @@ The steps listed below for building and deploying the microservice application f
    $ oc log pod -f <pod name>
    ```
    Substitute the name of the Pods in the command above (as applicable).  
-
+<div id="test-svc"/>
 ### B] Test *ose-fis-jms-tx* microservice
 **NOTE:** The microservice [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer) should have been deployed to OpenShift and the corresponding Pods for the microservice and backend datastore (MongoDB) should be running.  The *ose-fis-auto-dealer* microservice exposes REST API service end-points which will be consumed by this microservice.
 
@@ -274,5 +274,20 @@ openshift domain name as they apply to your OpenShift environment.  You will als
   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/api-get.png)
 
 ### B] Test and simulate transaction rollback
-We are now going to simulate a transaction *failure* scenario and examine how the transaction rollback mechanism works.  Our microservice begins a **local** transaction before reading an XML message from the ActiveMQ Queue and commits the transaction only after the message has been successfully delivered to the target/destination system.  A successful delivery of the message to the target system is signalled by the receipt of a Http status code 200 (Ok) from the REST API service end-points.  On the other hand, if the target system/application cannot be reached (due to network issues) or if the REST API server itself is down, the microservice would attempt to re-deliver the message a pre-configured number of times (see below) and then eventually throw an exception.  This caught exception would signal the microservice to *rollback* the transaction.  When a transaction rollback occurs, the XML message read from the source Queue *vehiQ* would be delivered to the corresponding *Dead Letter* Queue *DLQ.vehiQ*.  This way when the target system/application comes   
-Follow the steps below to simulate the transaction failure scenario.  
+We are now going to simulate a transaction *failure* scenario and examine how the transaction rollback mechanism works.  Our microservice begins a **local** transaction before reading an XML message from the ActiveMQ Queue and commits the transaction only after the message has been successfully delivered to the target/destination system.  A successful delivery of the message to the target system is signalled by the receipt of a Http status code 200 (Ok) from the REST API service end-points.  On the other hand, if the target system/application cannot be reached (due to network issues) or if the REST API server is down, the Http cconnection would time out and throw an exception.  Upon receipt of an exception, the microservice (and JMS Transaction manager) would attempt to redeliver the message two more times to the REST service endpoint before rolling back the transaction.  The retry attempts is set to 2 and can be controlled via the property *msg.retries* in the file *'src/main/resources/jms.properties'*.  When a transaction rollback occurs, the XML message read from the source Queue *'vehiQ'* would be delivered to the corresponding *Dead Letter* Queue *'DLQ.vehiQ'*.  This way when the target system/application comes back up, the messages can be re-delivered by moving them to the source Queue *'vehiQ'*.
+
+Follow the steps below to simulate the transaction failure scenario.
+
+1.  Login into the OpenShift Web Console and scale the *ose-fis-auto-dealer* microservice down to zero.  See screenshot below.
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/pod-down.png)
+2.  Login into the Apache ActiveMQ admin console and send another XML message to source Queue *'vehiQ'*.  Follow the instructions <a href="#test-svc">here</a>
+3.  As the target REST API server is down, the micoservice *ose-fis-jms-tx* will try to deliver the message to the target REST service endpoint(s) a maximum of 3 times, then rollback the transaction and finally deliver the message to the dead letter queue *'DLQ.vehiQ'*.  See screenshots below.
+  * Use the OpenShift CLI to look at the Pod console log output and view the exception stack trace. See below.
+  ```
+  2016-06-12 13:10:11 WARN  TransactionErrorHandler:287 - Transaction rollback (0xab7a938) redelivered(true) for (MessageId: queue_vehiQ_ID_data-store.example.com-35011-1465669012136-4_2_1_1_1 on ExchangeId: ID-auto-dealer-jms-1-x08by-42051-1465672534571-0-48) caught: java.net.NoRouteToHostException: No route to host
+2016-06-12 13:10:11 WARN  TransactionErrorHandler:287 - Transaction rollback (0xab7a938) redelivered(true) for (MessageId: ID:data-store.example.com-35011-1465669012136-4:2:1:1:1 on ExchangeId: ID-auto-dealer-jms-1-x08by-42051-1465672534571-0-37) caught: java.net.NoRouteToHostException: No route to host
+2016-06-12 13:10:11 WARN  EndpointMessageListener:136 - Execution of JMS message listener failed. Caused by: [org.apache.camel.RuntimeCamelException - java.net.NoRouteToHostException: No route to host]
+org.apache.camel.RuntimeCamelException: java.net.NoRouteToHostException: No route to host
+  ```
+  * Verify the XML message has been delivered to the dead letter Queue **DLQ.vehiQ**.  See below.
+  ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/)
