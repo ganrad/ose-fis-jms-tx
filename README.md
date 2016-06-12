@@ -274,7 +274,7 @@ openshift domain name as they apply to your OpenShift environment.  You will als
   
   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/api-get.png)
 
-### B] Test and simulate transaction rollback
+### C] Test and simulate transaction rollback
 We are now going to simulate a transaction *failure* scenario and examine how the transaction rollback mechanism works.  Our microservice begins a **local** transaction before reading an XML message from the ActiveMQ Queue and commits the transaction only after the message has been successfully delivered to the target/destination system.  A successful delivery of the message to the target system is signalled by the receipt of a Http status code 200 (Ok) from the REST API service end-points.  On the other hand, if the target system/application cannot be reached (due to network issues) or if the REST API server is down, the Http connection would time out and throw an exception.  Upon receipt of an exception, the microservice (and JMS Transaction manager) would attempt to redeliver the message two more times to the REST service endpoint before rolling back the transaction.  The retry attempts is set to 2 and can be configured via the property *msg.retries* in the file *'src/main/resources/jms.properties'*.  When a transaction rollback occurs, the XML message read from the source Queue *'vehiQ'* would be delivered to the corresponding *Dead Letter* Queue *'DLQ.vehiQ'*.  This way when the target system/application comes back up, the messages can be re-delivered by moving them to the source Queue *'vehiQ'*.
 
 Follow the steps below to simulate the transaction failure scenario.
