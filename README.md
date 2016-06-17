@@ -157,7 +157,7 @@ The steps listed below for building and deploying the microservice application f
   * At this point, you should have successfully built an Apache Camel based JMS microservice using OpenShift FIS tooling and deployed the same to OpenShift PaaS!
   
   ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/pod-status.png)
-8.  Open separate command line windows and tail the output from the both the application (microservice) Pods.
+8.  Open separate command line windows and tail the log output from both the application (microservice) Pods.
    
    ```
    $ oc get pods
