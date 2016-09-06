@@ -13,7 +13,7 @@ For building Apache Camel applications within Docker containers and then deployi
 2.  **Apache Maven Workflow** : Using this path, the developer uses fabric8 Maven plug-in(s) to build the Apache Camel application, generate the docker image containing both the compiled application binary & the run-time, push the docker image to the registry & lastly generate the TOD containing the list of kubernetes objects necessary to deploy the application to OpenShift.  For more detailed info. on this workflow & steps for deploying a sample application using this workflow, please refer to this GitHub project <https://github.com/RedHatWorkshops/rider-auto-openshift>
 
 ## Description
-This project buids upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the microservice to OpenShift. 
+This project builds upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the microservice to OpenShift. 
 
 This project examines and demonstrates the following OpenShift Enterprise / FIS features that are essential for building a highly performant, reliable and scalable integration application.
 
