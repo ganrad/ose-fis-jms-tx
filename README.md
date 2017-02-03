@@ -1,7 +1,7 @@
 # OpenShift FIS Microservice *ose-fis-jms-tx*
 **Important Note:** This project assumes the readers have a basic working knowledge of *Red Hat OpenShift Container Platform / Enterprise* (v3.1 or later) & are familiar with the underlying framework components such as Docker & Kubernetes.  Readers are also advised to familiarize themselves with the *Kubernetes* API object model (high level) before beginning to work on this *microservice* implementation.  For quick reference, links to a couple of useful on-line resources are listed below.
 
-1.  [OpenShift Enterprise Documentation](https://docs.openshift.com/)
+1.  [OpenShift CP/Enterprise Documentation](https://docs.openshift.com/)
 2.  [Kubernetes Documentation](http://kubernetes.io/docs/user-guide/pods/)
 
 This project uses OpenShift FIS (Fuse Integration Services) tools and explains how to develop, build and deploy Apache Camel based microservices on OpenShift PaaS.
@@ -15,7 +15,7 @@ For building Apache Camel applications within Docker containers and then deployi
 ## Description
 This project builds upon the OpenShift concepts discussed in the GitHub project titled [ose-fis-auto-dealer](https://github.com/ganrad/ose-fis-auto-dealer).  Additionally, this project presumes the readers have gone thru the *ose-fis-auto-dealer* project and successfully deployed the microservice to OpenShift. 
 
-This project examines and demonstrates the following OpenShift Enterprise / FIS features that are essential for building a highly performant, reliable and scalable integration application.
+This project examines and demonstrates the following OpenShift CP FIS features that are essential for building a highly performant, reliable and scalable integration application.
 
 1.  **S2I Workflow**: Accelerate the development, testing and deployment of integration applications with OpenShift xPaaS.
 2.  **Reliability**: Use of a transaction manager (Spring PTM) for guaranteed delivery of messages between source and target systems.  Data integrity and consistency are key requirements for almost all enterprise applications.  To ensure data integrity and consistency, the application has to perform all read/write operations within a *transaction* under the control of a transaction manager (TM). The TM will ensure all reads and writes within a given transaction are executed atomically and the transaction is either committed or rolled back.  When the messages cannot be delivered to the target/destination systems, the TM will roll back the transaction to allow re-delivery of the messages at a later time.  This ensures data doesn't get lost in-flight between the source and target systems and the data is always consistent across all systems participating in the transaction. 
