@@ -1,10 +1,10 @@
 # OpenShift FIS Microservice *ose-fis-jms-tx*
-**Important Note:** This project assumes the readers have a basic working knowledge of *Red Hat OpenShift Enterprise v3.1/v3.2* (or upstream project -> OpenShift Origin) & are familiar with the underlying framework components such as Docker & Kubernetes.  Readers are also advised to familiarize themselves with the *Kubernetes* API object model (high level) before beginning to work on this *microservice* implementation.  For quick reference, links to a couple of useful on-line resources are listed below.
+**Important Note:** This project assumes the readers have a basic working knowledge of *Red Hat OpenShift Container Platform / Enterprise* (v3.1 or later) & are familiar with the underlying framework components such as Docker & Kubernetes.  Readers are also advised to familiarize themselves with the *Kubernetes* API object model (high level) before beginning to work on this *microservice* implementation.  For quick reference, links to a couple of useful on-line resources are listed below.
 
 1.  [OpenShift Enterprise Documentation](https://docs.openshift.com/)
 2.  [Kubernetes Documentation](http://kubernetes.io/docs/user-guide/pods/)
 
-This project uses OpenShift FIS (Fuse Integration Services) tools and explains how to develop, build and deploy Apache Camel based microservices in OpenShift Enterprise v3.1/v3.2.
+This project uses OpenShift FIS (Fuse Integration Services) tools and explains how to develop, build and deploy Apache Camel based microservices on OpenShift PaaS.
 
 <div id="deploy"/>
 For building Apache Camel applications within Docker containers and then deploying the resulting container images onto OpenShift, developers can take two different approaches or paths.  The steps outlined here use approach # 1 (see below) in order to build and deploy this microservice application.
@@ -71,7 +71,7 @@ This microservice is implemented using Apache Camel routes.  At a high level, th
 
 ![alt tag](https://raw.githubusercontent.com/ganrad/ose-fis-jms-tx/master/images/description.png)
 
-## Steps for deploying **ose-fis-jms-tx** microservice on OpenShift Enterprise v3.1/v3.2
+## Steps for deploying **ose-fis-jms-tx** microservice on OpenShift Container Platform
 
 ### A] Start Apache ActiveMQ JMS Provider
 This project uses the Apache ActiveMQ JMS provider (Broker) for providing reliable messaging & guaranteed delivery of messages between source and target systems.  The instructions outlined here assume the messaging provider is running on a server/node which resides outside the OpenShift Cluster.  This solution can also be easily tailored to use a JMS provider  that is running within the OpenShift cluster ([JBoss A-MQ](http://www.jboss.org/products/amq/overview/) within a Docker container). 
